@@ -19,15 +19,32 @@ public class ClipsController : ControllerBase
 
     [HttpGet("my/clips")]
     [Authorize("AbleToReadMyClips")]
-    public async Task<IActionResult> GetClips()
+    public async Task<IActionResult> GetClips(
+        [FromQuery(Name = "page")] int page,
+        [FromQuery(Name = "pageSize")] int pageSize
+        )
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if(userId == null) return Unauthorized();
 
-        var serviceResult = await _clipsService.GetClipsOfUser(userId);
+        if (page < 1) return BadRequest("Page was not valid.");
+
+        var getClipsResultsDto = new GetClipsRequestDto
+        {
+            PageNumber = page,
+            ElementsPerPage = Math.Min(pageSize, 25),
+        };
+
+        var serviceResult = await _clipsService.GetClipsOfUser(userId, getClipsResultsDto);
         if(serviceResult.IsError) return StatusCode(StatusCodes.Status500InternalServerError);
 
-        return new OkObjectResult(serviceResult.Result);
+        var getClipsResponseDto = new GetClipsResponseDto
+        {
+            Count = serviceResult.Result.Item1,
+            Clips = serviceResult.Result.Item2
+        };
+
+        return new OkObjectResult(getClipsResponseDto);
     }
 
     [HttpPost("{userId}/clips")]

@@ -5,7 +5,7 @@ using ClipsService.Models;
 namespace ClipsService.Services;
 public interface IClipsService
 {
-    Task<ServiceResult<List<Clip>>> GetClipsOfUser(string userId);
+    Task<ServiceResult<(int, List<Clip>)>> GetClipsOfUser(string userId, GetClipsRequestDto getClipsRequestDto);
     Task<ServiceResult<Clip>> AddClip(string userId, AddClipRequestDto clip);
     Task<ServiceResult<Clip>> DeleteClip(string userId, string clipId);
     Task<ServiceResult<Clip>> UpdateClip(string userId, string clipId, UpdateClipRequestDto clip);

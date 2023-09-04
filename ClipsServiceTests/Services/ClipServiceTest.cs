@@ -19,9 +19,11 @@ public class ClipServiceTest
     {
         var inMemConfig = new Dictionary<string, string>
         {
-            { "CosmosDbCosmosDbId", _cosmosDbId },
-            { "CosmosDbClipsContainerId", _clipsContainerId }
         };
+
+        Environment.SetEnvironmentVariable("CosmosDbCosmosDbId", _cosmosDbId);
+        Environment.SetEnvironmentVariable("CosmosDbClipsContainerId", _clipsContainerId);
+
 
         IConfiguration config = new ConfigurationBuilder()
             .AddInMemoryCollection(inMemConfig)
@@ -67,30 +69,78 @@ public class ClipServiceTest
         var db = client.GetDatabase(_cosmosDbId);
         var _clipsContainer = db.GetContainer(_clipsContainerId);
 
-        var userId1 = "userId1";
-        var clip1 = new Clip() { Id = Guid.NewGuid().ToString(), UserId = userId1 };
-        var clip2 = new Clip() { Id = Guid.NewGuid().ToString(), UserId = userId1};
-
+        var userId1 = "auth0|64dfd47a6982ac4913cf4464";
         var userId2 = "userId2";
-        var clip3 = new Clip() {  Id = Guid.NewGuid().ToString(), UserId = userId2};
-        var creatNewClipResponse1 = await _clipsContainer.CreateItemAsync(clip1, new PartitionKey(userId1));
-        var creatNewClipResponse2 = await _clipsContainer.CreateItemAsync(clip2, new PartitionKey(userId1));
-        var creatNewClipResponse3 = await _clipsContainer.CreateItemAsync(clip3, new PartitionKey(userId2));
+        for (var i = 0; i < 30; i++)
+        {
+            var clip1 = new Clip() { Id = Guid.NewGuid().ToString(), UserId = userId1 };
+            await _clipsContainer.CreateItemAsync<Clip>(clip1, new PartitionKey(userId1));
+        }
 
-        var userId3 = "userId3";
+        for (var i = 0; i < 5; i++)
+        {
+            var clip2 = new Clip() { Id = Guid.NewGuid().ToString(), UserId = userId2 };
+            await _clipsContainer.CreateItemAsync<Clip>(clip2, new PartitionKey(userId2));
+        }
 
-        var result = await _clipService.GetClipsOfUser(userId1);
+      
+        var getClipsRequestDto = new GetClipsRequestDto()
+        {
+            PageNumber = 2,
+            ElementsPerPage = 10,
+        };
+
+        var result = await _clipService.GetClipsOfUser(userId1, getClipsRequestDto);
         Assert.IsFalse(result.IsError);
-        Assert.IsTrue(result.Result.Count == 2);
+        Assert.IsTrue(result.Result.Item1 == 30);
+        Assert.IsTrue(result.Result.Item2.Count == 10);
 
-        result = await _clipService.GetClipsOfUser(userId2);
-        Assert.IsFalse(result.IsError);
-        Assert.IsTrue(result.Result.Count == 1);
+        getClipsRequestDto = new GetClipsRequestDto()
+        {
+            PageNumber = 4,
+            ElementsPerPage = 8,
+        };
 
-        var createdClip = result.Result;
-        result = await _clipService.GetClipsOfUser(userId3);
+        result = await _clipService.GetClipsOfUser(userId1, getClipsRequestDto);
         Assert.IsFalse(result.IsError);
-        Assert.IsTrue(result.Result.Count == 0);
+        Assert.IsTrue(result.Result.Item1 == 30);
+        Assert.IsTrue(result.Result.Item2.Count == 6);
+
+
+        getClipsRequestDto = new GetClipsRequestDto()
+        {
+            PageNumber = -1,
+            ElementsPerPage = 8,
+        };
+
+        result = await _clipService.GetClipsOfUser(userId1, getClipsRequestDto);
+        Assert.IsFalse(result.IsError);
+        Assert.IsTrue(result.Result.Item1 == 30);
+        Assert.That(result.Result.Item2.Count, Is.EqualTo(8));
+
+        getClipsRequestDto = new GetClipsRequestDto()
+        {
+            PageNumber = 1,
+            ElementsPerPage = 2,
+        };
+
+        result = await _clipService.GetClipsOfUser(userId2, getClipsRequestDto);
+        Assert.IsFalse(result.IsError);
+        Assert.That(result.Result.Item1, Is.EqualTo(5));
+        Assert.That(result.Result.Item2.Count, Is.EqualTo(2));
+
+
+        getClipsRequestDto = new GetClipsRequestDto()
+        {
+            PageNumber = 50,
+            ElementsPerPage = 2,
+        };
+
+        result = await _clipService.GetClipsOfUser(userId2, getClipsRequestDto);
+        Assert.IsFalse(result.IsError);
+        Assert.That(result.Result.Item1, Is.EqualTo(5));
+        Assert.That(result.Result.Item2.Count, Is.EqualTo(0));
+
     }
 
 

@@ -19,9 +19,9 @@ public class ClipService : IClipsService
         _clipsContainer = db.GetContainer(_contianerId);
     }
 
-    public async Task<ServiceResult<List<Clip>>> GetClipsOfUser(string userId)
+    public async Task<ServiceResult<(int , List<Clip>)>> GetClipsOfUser(string userId, GetClipsRequestDto getClipsRequestDto)
     {
-        ServiceResult<List<Clip>> serviceResult = new();
+        ServiceResult<(int, List<Clip>)> serviceResult = new();
         try
         {
             var queryDefinition = new QueryDefinition($"SELECT * FROM {_contianerId}");
@@ -37,7 +37,16 @@ public class ClipService : IClipsService
                 var result = await iterator.ReadNextAsync();
                 results.AddRange(result.Resource);
             }
-            serviceResult.Result = results;
+
+            var count = results.Count;
+            var orderResults = results.OrderByDescending(x => x.DateCreated);
+
+            results = orderResults
+                .Skip((getClipsRequestDto.PageNumber -1) * getClipsRequestDto.ElementsPerPage)
+                .Take(getClipsRequestDto.ElementsPerPage)
+                .ToList();
+
+            serviceResult.Result = (count ,results);
         }
         catch (Exception ex)
         {
