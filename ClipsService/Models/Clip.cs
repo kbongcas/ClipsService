@@ -8,27 +8,35 @@ namespace ClipsService.Models;
 public class Clip
 {
     [JsonProperty("id")]
-    public string Id { get;}
+    public string Id { get; set; }
+
+    [JsonProperty("dateCreated")]
+    public DateTime DateCreated { get; set; }
+
+    [JsonProperty("dateModified")]
+    public DateTime DateModified { get; set; }
 
     [JsonProperty("name")]
-    public string Name {  get;}
+    public string Name { get; set; }
 
     [JsonProperty("description")]
-    public string Description {  get;}
+    public string Description { get; set; }
 
     [JsonProperty("uri")]
-    public Uri? Uri { get; }
+    public Uri? Uri { get; set; }
 
     [JsonProperty("converted")]
-    public bool Converted { get; }
+    public bool Converted { get; set; }
 
-    public Clip(string id, string name, string description, Uri? uri, bool converted)
+    [JsonProperty("public")]
+    public bool Public { get; set; }
+
+    [JsonProperty("userId")]
+    public string UserId { get; set; }
+
+    public Clip()
     {
-        if (String.IsNullOrEmpty(name)) throw new ArgumentException("Name must not be empty");
-        Id = id;
-        Name = name;
-        Description = description;
-        Uri = uri;
-        Converted = converted;
+        DateModified = DateTime.Now;
+        DateCreated = DateTime.Now;
     }
 }

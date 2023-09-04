@@ -1,11 +1,6 @@
 ﻿using ClipsService.Dtos;
-using ClipsService.Errors;
-using ClipsService.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration.UserSecrets;
-using Newtonsoft.Json;
-using System.Data.Common;
 using System.Security.Claims;
 
 namespace ClipsService.Controllers;
@@ -29,7 +24,7 @@ public class ClipsController : ControllerBase
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if(userId == null) return Unauthorized();
 
-        var serviceResult = await _clipsService.GetClips(userId);
+        var serviceResult = await _clipsService.GetClipsOfUser(userId);
         if(serviceResult.IsError) return StatusCode(StatusCodes.Status500InternalServerError);
 
         return new OkObjectResult(serviceResult.Result);
@@ -63,7 +58,7 @@ public class ClipsController : ControllerBase
     [Authorize("AbleToWriteMyClips")]
     public async Task<IActionResult> UpdateClipAsync(
         string id, 
-        [FromBody]UpdateMyClipRequestDto updateClipRequestDto)
+        [FromBody]UpdateClipRequestDto updateClipRequestDto)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if(userId == null) return Unauthorized();
@@ -98,15 +93,11 @@ public class ClipsController : ControllerBase
     {
         try
         {
-            Console.WriteLine($"UpdateUsersClipUri Called: {JsonConvert.SerializeObject(updateClipUriRequestDto)}");
             if(userId == null) return new BadRequestResult();
-            Console.WriteLine($"UpdateUsersClipUri Called UserId: {userId}");
-            Console.WriteLine($"UpdateUsersClipUri Called UserId: {id}");
 
             var serviceResult = await _clipsService.UpdateClipUri(userId, id, updateClipUriRequestDto);
             if (serviceResult.IsError) throw new Exception(serviceResult.ErrorMessage);
 
-            Console.WriteLine($"UpdateUsersClipUri Responsed: {JsonConvert.SerializeObject(serviceResult.Result)}");
             return new OkObjectResult(serviceResult.Result);
         }
         catch (Exception ex)
@@ -116,5 +107,4 @@ public class ClipsController : ControllerBase
         }
 
     }
-
 }

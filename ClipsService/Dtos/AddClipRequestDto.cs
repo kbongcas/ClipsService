@@ -16,4 +16,7 @@ public class AddClipRequestDto
 
     [JsonProperty("converted")]
     public bool Converted { get; set; }
+
+    [JsonProperty("Public")]
+    public bool Public { get; set; }
 }
