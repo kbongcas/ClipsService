@@ -69,7 +69,7 @@ public class ClipServiceTest
         var db = client.GetDatabase(_cosmosDbId);
         var _clipsContainer = db.GetContainer(_clipsContainerId);
 
-        var userId1 = "auth0|64dfd47a6982ac4913cf4464";
+        var userId1 = "";
         var userId2 = "userId2";
         for (var i = 0; i < 30; i++)
         {

@@ -1,3 +1,4 @@
+using Azure.Storage.Blobs;
 using ClipsService.Auth;
 using ClipsService.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -53,10 +54,13 @@ public class Program
         builder.Services.AddSingleton<IAuthorizationHandler, HasAnyPermRequirementHandler>();
 
         // Database Setup
+        var azureStorageConnection = Environment.GetEnvironmentVariable("AzureStorageConnectionString");
         var connectionString = Environment.GetEnvironmentVariable("CosmosDbConnectionString");
+        builder.Services.AddSingleton<BlobServiceClient>(x => new BlobServiceClient(azureStorageConnection));
         builder.Services.AddSingleton<CosmosClient>(s => new CosmosClient(connectionString)); ;
         builder.Services.AddTransient<Services.IClipsService, Services.ClipService>();
         builder.Services.AddTransient<Services.IUserService, Services.UserService>();
+        builder.Services.AddTransient<Services.IStorageService, Services.StorageService>();
 
         var app = builder.Build();
 
