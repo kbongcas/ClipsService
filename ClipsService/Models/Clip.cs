@@ -23,7 +23,7 @@ public class Clip
     public string Description { get; set; }
 
     [JsonProperty("uri")]
-    public Uri? Uri { get; set; }
+    public string Uri { get; set; }
 
     [JsonProperty("converted")]
     public bool Converted { get; set; }
