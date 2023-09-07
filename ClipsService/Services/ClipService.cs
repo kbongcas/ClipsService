@@ -66,8 +66,8 @@ public class ClipService : IClipsService
             {
                 Id = Guid.NewGuid().ToString(),
                 Name = addClipRequestDto.Name,
-                Description = addClipRequestDto.Description,
-                Uri = addClipRequestDto.Uri == "" ? null : new Uri(addClipRequestDto.Uri),
+                Description = addClipRequestDto.Description ?? "",
+                Uri = addClipRequestDto.Uri ?? "",
                 Converted = addClipRequestDto.Converted,
                 Public = addClipRequestDto.Public,
                 UserId = userId,
