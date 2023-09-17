@@ -11,10 +11,12 @@ namespace ClipsService.Controllers;
 public class ClipsController : ControllerBase
 {
     private readonly Services.IClipsService _clipsService;
+    private readonly Services.IStorageService _storageService;
 
-    public ClipsController(Services.IClipsService clipsService)
+    public ClipsController(Services.IClipsService clipsService, Services.IStorageService storageService)
     {
         _clipsService = clipsService;
+        _storageService = storageService;
     }
 
     [HttpGet("my/clips")]
@@ -63,12 +65,37 @@ public class ClipsController : ControllerBase
     [Authorize("AbleToWriteMyClips")]
     public async Task<IActionResult> DeleteClip(string id)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if(userId == null) return Unauthorized();
+        try
+        {
 
-        var serviceResult = await _clipsService.DeleteClip(userId, id);
-        if(serviceResult.IsError) return StatusCode(StatusCodes.Status500InternalServerError);
-        return new OkObjectResult(serviceResult.Result);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
+
+            var serviceResult = await _clipsService.DeleteClip(userId, id);
+            if (serviceResult.IsError) return StatusCode(StatusCodes.Status500InternalServerError);
+
+            var removeGifServiceResult = await _storageService.RemoveFile(id + ".gif");
+            if (removeGifServiceResult.IsError) return StatusCode(StatusCodes.Status500InternalServerError);
+
+            var removeHtmlerviceResult = await _storageService.RemoveFile(id + ".html");
+            if (removeHtmlerviceResult.IsError) return StatusCode(StatusCodes.Status500InternalServerError);
+
+            if (!removeGifServiceResult.Result)
+            {
+                Console.WriteLine($"Attempted to delete {id}.gif, but file is not in storage");
+            }
+            if (!removeHtmlerviceResult.Result)
+            {
+                Console.WriteLine($"Attempted to delete {id}.html, but file is not in storage");
+            }
+
+            return new OkObjectResult(serviceResult.Result);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message.ToString());
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
     }
 
     [HttpPatch("my/clips/{id}")]

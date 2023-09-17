@@ -66,8 +66,8 @@ public class ClipService : IClipsService
             {
                 Id = Guid.NewGuid().ToString(),
                 Name = addClipRequestDto.Name,
-                Description = addClipRequestDto.Description,
-                Uri = addClipRequestDto.Uri == "" ? null : new Uri(addClipRequestDto.Uri),
+                Description = addClipRequestDto.Description ?? "",
+                Uri = addClipRequestDto.Uri ?? "",
                 Converted = addClipRequestDto.Converted,
                 Public = addClipRequestDto.Public,
                 UserId = userId,
@@ -167,7 +167,7 @@ public class ClipService : IClipsService
         try
         {
             var deleteItemResponse = await _clipsContainer.DeleteItemAsync<Clip>(clipId, new PartitionKey(userId));
-            if (deleteItemResponse.StatusCode != System.Net.HttpStatusCode.OK)
+            if (deleteItemResponse.StatusCode != System.Net.HttpStatusCode.NoContent)
                 throw new Exception($"Unable to remove clip: User: {userId} , Clip: {clipId}");
             serviceResult.Result = deleteItemResponse.Resource;
         }
