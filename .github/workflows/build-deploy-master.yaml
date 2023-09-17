@@ -1,4 +1,4 @@
-name: Clips Service Build and Deploy for
+name: Clips Service Build and Deploy for Master Branch
 
 on:
   push:
