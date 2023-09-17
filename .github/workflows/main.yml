@@ -1,4 +1,4 @@
-name: Clips Service Build and Deploy
+name: Clips Service Build and Deploy for Dev
 
 on:
   push:
